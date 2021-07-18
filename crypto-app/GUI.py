@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QCoreApplication
 
-import caesar_cipher, autokey_cipher, multiplicative_cipher
+import caesar_cipher, autokey_cipher, multiplicative_cipher, stream_cipher, transposition_cipher, vigenere_cipher
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -11,6 +11,8 @@ class Ui_MainWindow(object):
         self.input_text = ""
         self.output_text = "jj"
         self.cipher_chosen = "Caesar Cipher"
+        self.trans_chosen = "Reverse"
+        self.trans_yes = 0
     
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -33,18 +35,41 @@ class Ui_MainWindow(object):
         self.radioButton2.setGeometry(QtCore.QRect(1400, 40, 200, 60))
         self.radioButton2.setObjectName("Decrypt")
         
-        # For Dropdown
-        cipher_list = ["Caesar Cipher", "Multiplicative Cipher", "Autokey Cipher"]
+        
+        # For Dropdown Cipher
+        cipher_list = ["Caesar Cipher", "Multiplicative Cipher", "Autokey Cipher", "Stream Cipher", "Transposition Cipher", "Vigenere Cipher"]
         self.comboBox = QtWidgets.QComboBox(self.centralwidget)
         self.comboBox.setGeometry(QtCore.QRect(1400, 150, 400, 80))
         self.comboBox.setObjectName("comboBox")
         self.comboBox.setEditable(True)
         self.comboBox.addItems(cipher_list)
         
+        # For Dropdown Transform
+        cipher_list = ["Reverse Transform", "Replace Transform"]
+        self.comboBox1 = QtWidgets.QComboBox(self.centralwidget)
+        self.comboBox1.setGeometry(QtCore.QRect(1400, 300, 400, 80))
+        self.comboBox1.setObjectName("comboBox1")
+        self.comboBox1.setEditable(True)
+        self.comboBox1.addItems(cipher_list)
+        
         # For input button
         self.inputButton = QtWidgets.QPushButton(self.centralwidget)
         self.inputButton.setGeometry(QtCore.QRect(1050, 150, 200, 80))
         self.inputButton.setObjectName("inputButton")
+        
+        '''# For cipher radio
+        self.radioButton3 = QtWidgets.QRadioButton(self.centralwidget)
+        self.radioButton3.setGeometry(QtCore.QRect(1050, 300, 200, 50))
+        self.radioButton3.setObjectName("cipher")
+        
+        # For transform radio
+        self.radioButton4 = QtWidgets.QRadioButton(self.centralwidget)
+        self.radioButton4.setGeometry(QtCore.QRect(1050, 360, 200, 50))
+        self.radioButton4.setObjectName("transform")'''
+        # Checkbox for Transform
+        self.trans_checkbox = QtWidgets.QCheckBox(self.centralwidget)
+        self.trans_checkbox.setGeometry(QtCore.QRect(1050, 310, 200, 60))
+        self.trans_checkbox.setObjectName("trans_checkbox")
         
         # For Run button
         self.runButton = QtWidgets.QPushButton(self.centralwidget)
@@ -61,12 +86,19 @@ class Ui_MainWindow(object):
         self.openButton.setGeometry(QtCore.QRect(20, 40, 200, 60))
         self.openButton.setObjectName("openButton")
         
-        #For the list widget
+        #For the list widget input
         self.listWidget = QtWidgets.QListWidget(self.centralwidget)
-        self.listWidget.setGeometry(QtCore.QRect(20, 150, 950, 800))
+        self.listWidget.setGeometry(QtCore.QRect(20, 150, 450, 800))
         self.listWidget.setObjectName("listWidget")
         item = QtWidgets.QListWidgetItem()
         self.listWidget.addItem(item)
+        
+        #For the list widget output
+        self.listWidget1 = QtWidgets.QListWidget(self.centralwidget)
+        self.listWidget1.setGeometry(QtCore.QRect(500, 150, 450, 800))
+        self.listWidget1.setObjectName("listWidget1")
+        item = QtWidgets.QListWidgetItem()
+        self.listWidget1.addItem(item)
         
         
         self.retranslateUi(MainWindow)
@@ -97,7 +129,7 @@ class Ui_MainWindow(object):
         self.radioButton2.setFont(font)
         #self.radioButton2.toggled.connect(self.onDecryptButton)
         
-        # For the drop down
+        # For the drop down transform
         self.comboBox.setStyleSheet('QComboBox {background-color: white; color: green; border:3px solid green; font-family: Sitka Small; font: 12;} QComboBox::down-arrow {border: 1px dotted green;}')
         font = QtGui.QFont()
         font.setFamily("Sitka Small")
@@ -108,6 +140,17 @@ class Ui_MainWindow(object):
         line_edit.setFont(font)
         self.comboBox.activated[str].connect(self.choose_cipher)
         
+        # For the drop down transform
+        self.comboBox1.setStyleSheet('QComboBox {background-color: white; color: green; border:3px solid green; font-family: Sitka Small; font: 12;} QComboBox::down-arrow {border: 1px dotted green;}')
+        font = QtGui.QFont()
+        font.setFamily("Sitka Small")
+        font.setPointSize(8)
+        self.comboBox1.setFont(font)
+        font = QtGui.QFont("Sitka", 10)
+        line_edit = self.comboBox1.lineEdit()
+        line_edit.setFont(font)
+        self.comboBox1.activated[str].connect(self.choose_transform)
+        
         # For Key input
         self.inputButton.setText(_translate("centralwidget", "Enter the key"))
         self.inputButton.setStyleSheet('QPushButton {background-color: white; color: green; border:4px solid green;}')        
@@ -117,8 +160,34 @@ class Ui_MainWindow(object):
         self.inputButton.setFont(font)
         self.inputButton.clicked.connect(self.take_input)
         
+        '''# For cipher radio button
+        self.radioButton3.setText(_translate("centralwidget", "Cipher"))
+        self.radioButton3.setStyleSheet('QRadioButton {background-color: white; color: green; border:3px solid green;}')
+        self.radioButton3.setChecked(True)
+        font = QtGui.QFont()
+        font.setFamily("Sitka Small")
+        font.setPointSize(12)
+        self.radioButton3.setFont(font)
+        
+        # For transform radio Button
+        self.radioButton4.setText(_translate("centralwidget", "Transform"))
+        self.radioButton4.setStyleSheet('QRadioButton {background-color: white; color: green; border:3px solid green;}')
+        font = QtGui.QFont()
+        font.setFamily("Sitka Small")
+        font.setPointSize(12)
+        self.radioButton4.setFont(font)'''
+        
+        # Checkbox for Transform
+        self.trans_checkbox.setText(_translate("centralwidget", "Transform"))
+        self.trans_checkbox.setStyleSheet('QCheckBox {background-color: white; color: green; border:3px solid green;}')        
+        font = QtGui.QFont()
+        font.setFamily("Sitka Small")
+        font.setPointSize(10)
+        self.trans_checkbox.setFont(font)
+        self.trans_checkbox.stateChanged.connect(self.transbox)
+        
         # For run button
-        self.runButton.setText(_translate("centralwidget", "Run"))
+        self.runButton.setText(_translate("centralwidget", "Submit"))
         self.runButton.setStyleSheet('QPushButton {background-color: white; color: green; border:6px solid green;}')        
         font = QtGui.QFont()
         font.setFamily("Sitka Small")
@@ -127,7 +196,7 @@ class Ui_MainWindow(object):
         self.runButton.clicked.connect(self.runClicked)
         
         # For flush button
-        self.flushButton.setText(_translate("centralwidget", "Flush"))
+        self.flushButton.setText(_translate("centralwidget", "Save"))
         self.flushButton.setStyleSheet('QPushButton {background-color: white; color: green; border:3px solid green;}')        
         font = QtGui.QFont()
         font.setFamily("Sitka Small")
@@ -144,7 +213,7 @@ class Ui_MainWindow(object):
         self.openButton.setFont(font)
         self.openButton.clicked.connect(self.openClicked)
         
-        # For list widget
+        # For list widget input
         font = QtGui.QFont()
         font.setFamily("Sitka Small")
         font.setPointSize(10)
@@ -157,40 +226,85 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", ""))
         self.listWidget.setSortingEnabled(__sortingEnabled)
         
+        # For list widget output
+        font = QtGui.QFont()
+        font.setFamily("Sitka Small")
+        font.setPointSize(10)
+        self.listWidget1.setWordWrap(True)
+        self.listWidget1.setFont(font)
+        self.listWidget1.setStyleSheet('QListWidget {background-color: white; color: green; border:3px solid green;}')        
+        __sortingEnabled = self.listWidget1.isSortingEnabled()
+        self.listWidget1.setSortingEnabled(False)
+        item = self.listWidget1.item(0)
+        item.setText(_translate("MainWindow", ""))
+        self.listWidget1.setSortingEnabled(__sortingEnabled)
         
     
     def onEncryptButton(self):
-        if (self.cipher_chosen == "Caesar Cipher"):
-            self.key = int(self.key)
-            self.output_text = caesar_cipher.caesar_encryption(self.input_text, self.key)
-        if (self.cipher_chosen == "Multiplicative Cipher"):
-            self.key = int(self.key)
-            self.output_text = multiplicative_cipher.multi_encrypt(self.input_text, self.key)
-        if (self.cipher_chosen == "Autokey Cipher"):
-            self.key = str(self.key)
-            self.output_text = autokey_cipher.autokey_encrypt(self.input_text, self.key)
-        return
+        if self.trans_yes == 0:
+            if (self.cipher_chosen == "Caesar Cipher"):
+                self.key = int(self.key)
+                self.output_text = caesar_cipher.caesar_encryption(self.input_text, self.key)
+            if (self.cipher_chosen == "Multiplicative Cipher"):
+                self.key = int(self.key)
+                self.output_text = multiplicative_cipher.multi_encrypt(self.input_text, self.key)
+            if (self.cipher_chosen == "Autokey Cipher"):
+                self.key = str(self.key)
+                self.output_text = autokey_cipher.autokey_encrypt(self.input_text, self.key)
+            if (self.cipher_chosen == "Stream Cipher"):
+                self.key = str(self.key)
+                self.output_text = stream_cipher.stream_encrypt(self.input_text, self.key)
+            if (self.cipher_chosen == "Transposition Cipher"):
+                self.key = str(self.key)
+                self.output_text = transposition_cipher.transposition_encrypt(self.input_text, self.key)
+            if (self.cipher_chosen == "Vigenere Cipher"):
+                self.key = str(self.key)
+                self.output_text = vigenere_cipher.vigenere_encrypt(self.input_text, self.key)
+        else:
+            return
     
     def onDecryptButton(self):
-        if (self.cipher_chosen == "Caesar Cipher"):
-            self.key = int(self.key)
-            self.output_text = caesar_cipher.caesar_decryption(self.input_text, self.key)
-        if (self.cipher_chosen == "Multiplicative Cipher"):
-            self.key = int(self.key)
-            self.output_text = multiplicative_cipher.multi_decrypt(self.input_text, self.key)
-        if (self.cipher_chosen == "Autokey Cipher"):
-            self.key = str(self.key)
-            self.output_text = autokey_cipher.autokey_decrypt(self.input_text, self.key)
-        return
+        if self.trans_yes == 0:
+            if (self.cipher_chosen == "Caesar Cipher"):
+                self.key = int(self.key)
+                self.output_text = caesar_cipher.caesar_decryption(self.input_text, self.key)
+            if (self.cipher_chosen == "Multiplicative Cipher"):
+                self.key = int(self.key)
+                self.output_text = multiplicative_cipher.multi_decrypt(self.input_text, self.key)
+            if (self.cipher_chosen == "Autokey Cipher"):
+                self.key = str(self.key)
+                self.output_text = autokey_cipher.autokey_decrypt(self.input_text, self.key)
+            if (self.cipher_chosen == "Stream Cipher"):
+                self.key = str(self.key)
+                self.output_text = stream_cipher.stream_decrypt(self.input_text, self.key)
+            if (self.cipher_chosen == "Transposition Cipher"):
+                self.key = str(self.key)
+                self.output_text = transposition_cipher.transposition_decrypt(self.input_text, self.key)
+            if (self.cipher_chosen == "Vigenere Cipher"):
+                self.key = str(self.key)
+                self.output_text = vigenere_cipher.vigenere_decrypt(self.input_text, self.key)
+        else:
+            return
     
     def choose_cipher(self, text):
+        self.listWidget1.clear()
         self.cipher_chosen = text
+        
+    def choose_transform(self, text):
+        self.listWidget1.clear()
+        self.trans_chosen = text
     
     def take_input(self):
-
-        inp, done = QtWidgets.QInputDialog.getText(self.centralwidget, 'Input Dialog', 'Enter your name:') 
+        self.listWidget1.clear()
+        inp, done = QtWidgets.QInputDialog.getText(self.centralwidget, 'Key Input', 'Enter the key:') 
         if done:
             self.key = inp
+            
+    def transbox(self, checked):
+        if checked:
+            self.trans_yes = 1
+        else:
+            self.trans_yes = 0
         
         
     
@@ -199,9 +313,10 @@ class Ui_MainWindow(object):
             self.onEncryptButton()
         if self.radioButton2.isChecked():
             self.onDecryptButton()
-        self.listWidget.clear()
-        self.listWidget.addItem(self.output_text)
+        self.listWidget1.clear()
+        self.listWidget1.addItem(self.output_text)
         return
+    
     
     def flushClicked(self):
         filename = QFileDialog.getSaveFileName(MainWindow, "Save File", '.txt')
@@ -216,6 +331,7 @@ class Ui_MainWindow(object):
         
     
     def openClicked(self):
+        self.listWidget1.clear()
         self.listWidget.clear() #clear the widget
         filename = QFileDialog.getOpenFileName() #open file dialog box
         path = filename[0] #it's address
