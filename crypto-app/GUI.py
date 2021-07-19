@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QCoreApplication
 
-import caesar_cipher, autokey_cipher, multiplicative_cipher, stream_cipher, transposition_cipher, vigenere_cipher
+import caesar_cipher, autokey_cipher, multiplicative_cipher, stream_cipher, transposition_cipher, vigenere_cipher, case_transform, reverse_transform
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -11,7 +11,7 @@ class Ui_MainWindow(object):
         self.input_text = ""
         self.output_text = "jj"
         self.cipher_chosen = "Caesar Cipher"
-        self.trans_chosen = "Reverse"
+        self.trans_chosen = "Case Transform"
         self.trans_yes = 0
     
     def setupUi(self, MainWindow):
@@ -45,7 +45,7 @@ class Ui_MainWindow(object):
         self.comboBox.addItems(cipher_list)
         
         # For Dropdown Transform
-        cipher_list = ["Reverse Transform", "Replace Transform"]
+        cipher_list = ["Case Transform", "Reverse Transform"]
         self.comboBox1 = QtWidgets.QComboBox(self.centralwidget)
         self.comboBox1.setGeometry(QtCore.QRect(1400, 300, 400, 80))
         self.comboBox1.setObjectName("comboBox1")
@@ -57,15 +57,6 @@ class Ui_MainWindow(object):
         self.inputButton.setGeometry(QtCore.QRect(1050, 150, 200, 80))
         self.inputButton.setObjectName("inputButton")
         
-        '''# For cipher radio
-        self.radioButton3 = QtWidgets.QRadioButton(self.centralwidget)
-        self.radioButton3.setGeometry(QtCore.QRect(1050, 300, 200, 50))
-        self.radioButton3.setObjectName("cipher")
-        
-        # For transform radio
-        self.radioButton4 = QtWidgets.QRadioButton(self.centralwidget)
-        self.radioButton4.setGeometry(QtCore.QRect(1050, 360, 200, 50))
-        self.radioButton4.setObjectName("transform")'''
         # Checkbox for Transform
         self.trans_checkbox = QtWidgets.QCheckBox(self.centralwidget)
         self.trans_checkbox.setGeometry(QtCore.QRect(1050, 310, 200, 60))
@@ -160,23 +151,6 @@ class Ui_MainWindow(object):
         self.inputButton.setFont(font)
         self.inputButton.clicked.connect(self.take_input)
         
-        '''# For cipher radio button
-        self.radioButton3.setText(_translate("centralwidget", "Cipher"))
-        self.radioButton3.setStyleSheet('QRadioButton {background-color: white; color: green; border:3px solid green;}')
-        self.radioButton3.setChecked(True)
-        font = QtGui.QFont()
-        font.setFamily("Sitka Small")
-        font.setPointSize(12)
-        self.radioButton3.setFont(font)
-        
-        # For transform radio Button
-        self.radioButton4.setText(_translate("centralwidget", "Transform"))
-        self.radioButton4.setStyleSheet('QRadioButton {background-color: white; color: green; border:3px solid green;}')
-        font = QtGui.QFont()
-        font.setFamily("Sitka Small")
-        font.setPointSize(12)
-        self.radioButton4.setFont(font)'''
-        
         # Checkbox for Transform
         self.trans_checkbox.setText(_translate("centralwidget", "Transform"))
         self.trans_checkbox.setStyleSheet('QCheckBox {background-color: white; color: green; border:3px solid green;}')        
@@ -261,7 +235,11 @@ class Ui_MainWindow(object):
                 self.key = str(self.key)
                 self.output_text = vigenere_cipher.vigenere_encrypt(self.input_text, self.key)
         else:
-            return
+            if (self.trans_chosen == "Case Transform"):
+                self.output_text = case_transform.case_transform(self.input_text)
+            if (self.trans_chosen == "Reverse Transform"):
+                self.output_text = reverse_transform.reverse(self.input_text)
+            
     
     def onDecryptButton(self):
         if self.trans_yes == 0:
@@ -284,7 +262,10 @@ class Ui_MainWindow(object):
                 self.key = str(self.key)
                 self.output_text = vigenere_cipher.vigenere_decrypt(self.input_text, self.key)
         else:
-            return
+            if (self.trans_chosen == "Case Transform"):
+                self.output_text = case_transform.case_transform(self.input_text)
+            if (self.trans_chosen == "Reverse Transform"):
+                self.output_text = reverse_transform.reverse(self.input_text)
     
     def choose_cipher(self, text):
         self.listWidget1.clear()
